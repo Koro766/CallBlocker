@@ -74,7 +74,27 @@ CallBlocker/
 
 ## 🚀 How to Build & Install
 
-### Option A: Using Android Studio
+### Option A: Using GitHub Actions (Automated Cloud Build - Recommended)
+You don't need Android Studio or the Android SDK installed on your computer.
+
+1. **Push this repository to GitHub**:
+   ```bash
+   cd CallBlocker
+   # Create a repository on GitHub, then link and push:
+   git remote add origin https://github.com/<YOUR_USERNAME>/<YOUR_REPO>.git
+   git branch -M main
+   git push -u origin main
+   ```
+2. **Download the compiled APK**:
+   - Go to your repository on GitHub.
+   - Click the **Actions** tab at the top.
+   - Select the latest **"Build Android APK"** workflow run.
+   - Under **Artifacts**, download `CallBlocker-Debug-APK.zip`.
+   - Extract and install the `app-debug.apk` directly on your Android phone!
+
+*(Tip: Pushing a version tag like `git tag v1.0.0 && git push origin v1.0.0` will also automatically publish the APK to the repository's GitHub Releases page!)*
+
+### Option B: Using Android Studio
 1. Launch **Android Studio**.
 2. Select **Open** and choose the `CallBlocker` directory.
 3. Allow Gradle to sync.
