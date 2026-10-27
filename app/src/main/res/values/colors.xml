@@ -1,0 +1,16 @@
+<resources>
+    <color name="primary">#1E88E5</color>
+    <color name="primary_dark">#1565C0</color>
+    <color name="accent">#FF5722</color>
+    <color name="color_active">#2E7D32</color>
+    <color name="color_active_light">#E8F5E9</color>
+    <color name="color_inactive">#757575</color>
+    <color name="color_inactive_light">#EEEEEE</color>
+    <color name="color_blocked">#D32F2F</color>
+    <color name="color_blocked_light">#FFEBEE</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="window_background">#F5F7FA</color>
+</resources>

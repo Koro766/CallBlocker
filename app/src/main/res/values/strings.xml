@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">Call Blocker</string>
+    <string name="tile_label">Block Unknowns</string>
+    <string name="blocking_active">Blocking Active</string>
+    <string name="blocking_paused">Blocking Paused</string>
+    <string name="status_active_desc">Non-contact incoming calls are blocked instantly</string>
+    <string name="status_paused_desc">All incoming calls are currently allowed</string>
+
+    <!-- Notification Strings -->
+    <string name="channel_status_name">Blocker Status Toggle</string>
+    <string name="channel_status_desc">Shows ongoing blocker status and quick toggle button</string>
+    <string name="channel_alerts_name">Blocked Call Alerts</string>
+    <string name="channel_alerts_desc">Notifies you when an unknown call is rejected</string>
+    <string name="action_turn_off">Pause</string>
+    <string name="action_turn_on">Activate</string>
+    <string name="notif_blocked_title">Blocked Unknown Call</string>
+    <string name="notif_blocked_text">Call from %1$s was rejected (not in contacts)</string>
+
+    <!-- UI Strings -->
+    <string name="title_setup">Permissions &amp; Setup</string>
+    <string name="perm_screening_title">1. Set as Call Screening App</string>
+    <string name="perm_screening_desc">Required for Android to let the app screen and block incoming calls</string>
+    <string name="perm_contacts_title">2. Contacts Permission</string>
+    <string name="perm_contacts_desc">Required to check whether incoming caller is in your address book</string>
+    <string name="perm_notification_title">3. Notification Permission</string>
+    <string name="perm_notification_desc">Required to show the quick toggle button in your notification drawer</string>
+    <string name="btn_grant">Grant</string>
+    <string name="btn_granted">Granted ✓</string>
+
+    <!-- Tile guide -->
+    <string name="title_tile_guide">Quick Settings Tile (Like Wi-Fi / Bluetooth)</string>
+    <string name="tile_guide_desc">Swipe down from top of your screen twice to open Quick Settings, tap the Edit (pencil) icon, and drag "Block Unknowns" into your active tiles for 1-tap toggling anytime.</string>
+
+    <!-- Blocked History -->
+    <string name="title_history">Recently Blocked Calls</string>
+    <string name="empty_history">No calls blocked yet</string>
+    <string name="btn_clear_history">Clear History</string>
+</resources>
