@@ -9,9 +9,10 @@ Features a **toggle button directly in the notification shade / Quick Settings (
 ## ✨ Features
 
 - **⚡ Instant Call Blocking**: Automatically rejects incoming calls from any phone number that isn't saved in your address book.
+- **🔄 Dynamic Real-Time Contacts Lookup**: Multi-tier dynamic contact verification (`PhoneLookup`, cleaned numbers, national suffixes, and direct address book matching) ensuring newly saved contacts are recognized instantly.
+- **🔘 Two-Way Sync (Tile, Switch & Notification)**: Real-time bi-directional synchronization between the Quick Settings Tile, persistent notification action button, and the in-app switch.
+- **🕵️ Stealth Mode (Hide App Icon)**: Hide the app icon from your phone's app drawer. Open the app anytime simply by **holding (long-pressing) the Quick Settings Tile** or tapping the notification.
 - **🔇 Zero Ringing & Distraction**: Suppresses incoming call ringing and notification sounds so you are never disturbed.
-- **🔘 Toggle Like Wi-Fi / Bluetooth (Quick Settings Tile)**: Add a quick toggle tile to your notification pull-down menu right beside Wi-Fi, Bluetooth, and Flashlight.
-- **📲 Notification Action Button**: An ongoing notification in your notification tray allows 1-tap toggling between "Active" and "Paused".
 - **📋 Blocked Calls History**: View a log of recently blocked calls (number & timestamp) with the ability to clear history.
 - **🔋 Battery Efficient & Clean**: Uses the official Android Telecom `CallScreeningService` API—it only activates when an incoming call arrives and consumes zero battery in the background.
 
