@@ -5,13 +5,13 @@
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingVertical="10dp">
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
 
     <ImageView
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:background="@drawable/bg_card"
-        android:backgroundTint="@color/color_blocked_light"
+        android:background="@drawable/bg_blocked_badge"
         android:padding="8dp"
         android:src="@drawable/ic_phone_blocked"
         app:tint="@color/color_blocked"
@@ -45,10 +45,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_card"
-        android:backgroundTint="@color/color_blocked_light"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="4dp"
+        android:background="@drawable/bg_blocked_badge"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
         android:text="BLOCKED"
         android:textColor="@color/color_blocked"
         android:textSize="10sp"

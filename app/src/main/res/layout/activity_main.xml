@@ -177,7 +177,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
-                            android:paddingHorizontal="12dp"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
                             android:text="@string/btn_grant"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -185,7 +186,8 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_marginVertical="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
                         android:background="@color/divider" />
 
                     <!-- Step 2: Contacts Permission -->
@@ -232,7 +234,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
-                            android:paddingHorizontal="12dp"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
                             android:text="@string/btn_grant"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -240,7 +243,8 @@
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_marginVertical="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
                         android:background="@color/divider" />
 
                     <!-- Step 3: Notification Permission -->
@@ -287,7 +291,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
-                            android:paddingHorizontal="12dp"
+                            android:paddingLeft="12dp"
+                            android:paddingRight="12dp"
                             android:text="@string/btn_grant"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -383,7 +388,8 @@
                         android:id="@+id/tvEmptyHistory"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginVertical="20dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="20dp"
                         android:gravity="center"
                         android:text="@string/empty_history"
                         android:textColor="@color/text_secondary"

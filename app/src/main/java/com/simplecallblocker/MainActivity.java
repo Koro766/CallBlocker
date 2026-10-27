@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.quicksettings.TileService;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -31,6 +32,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private static final int REQUEST_CODE_ROLE = 101;
     private static final int REQUEST_CODE_CONTACTS = 102;
     private static final int REQUEST_CODE_NOTIF = 103;
@@ -56,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView rvBlockedCalls;
     private BlockedCallsAdapter adapter;
 
+    private boolean isReceiverRegistered = false;
+
     // Broadcast receiver to listen for toggle events from Notification or QS Tile
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override
@@ -68,21 +72,44 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        try {
+            setContentView(R.layout.activity_main);
 
-        bindViews();
-        setupListeners();
-        setupRecyclerView();
+            bindViews();
+            setupListeners();
+            setupRecyclerView();
 
-        // Ensure notification channels are registered and notification is displayed
-        NotificationHelper.createNotificationChannels(this);
-        NotificationHelper.updateStatusNotification(this);
+            // Ensure notification channels are registered and notification is displayed
+            NotificationHelper.createNotificationChannels(this);
+            NotificationHelper.updateStatusNotification(this);
+            Log.i(TAG, "MainActivity initialized successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onCreate", e);
+            Toast.makeText(this, "Startup warning: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(stateReceiver, new IntentFilter(BlockerPreferences.ACTION_STATE_CHANGED));
+        try {
+            if (!isReceiverRegistered) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ContextCompat.registerReceiver(
+                            this,
+                            stateReceiver,
+                            new IntentFilter(BlockerPreferences.ACTION_STATE_CHANGED),
+                            ContextCompat.RECEIVER_NOT_EXPORTED
+                    );
+                } else {
+                    registerReceiver(stateReceiver, new IntentFilter(BlockerPreferences.ACTION_STATE_CHANGED));
+                }
+                isReceiverRegistered = true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error registering receiver", e);
+        }
+
         refreshStatusCard();
         checkPermissions();
         loadHistory();
@@ -91,9 +118,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        try {
-            unregisterReceiver(stateReceiver);
-        } catch (Exception ignored) {
+        if (isReceiverRegistered) {
+            try {
+                unregisterReceiver(stateReceiver);
+            } catch (Exception ignored) {
+            }
+            isReceiverRegistered = false;
         }
     }
 
@@ -118,14 +148,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        switchBlocker.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked != BlockerPreferences.isBlockerEnabled(this)) {
-                BlockerPreferences.setBlockerEnabled(this, isChecked);
-                refreshStatusCard();
-                NotificationHelper.updateStatusNotification(this);
-                updateTileService();
-            }
-        });
+        setupSwitchListener();
 
         btnGrantScreening.setOnClickListener(v -> requestCallScreeningRole());
         btnGrantContacts.setOnClickListener(v -> requestContactsPermission());
@@ -138,6 +161,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupSwitchListener() {
+        switchBlocker.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked != BlockerPreferences.isBlockerEnabled(this)) {
+                BlockerPreferences.setBlockerEnabled(this, isChecked);
+                refreshStatusCard();
+                NotificationHelper.updateStatusNotification(this);
+                updateTileService();
+            }
+        });
+    }
+
     private void setupRecyclerView() {
         adapter = new BlockedCallsAdapter();
         rvBlockedCalls.setLayoutManager(new LinearLayoutManager(this));
@@ -145,82 +179,101 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshStatusCard() {
-        boolean isEnabled = BlockerPreferences.isBlockerEnabled(this);
-        switchBlocker.setChecked(isEnabled);
+        try {
+            boolean isEnabled = BlockerPreferences.isBlockerEnabled(this);
+            switchBlocker.setOnCheckedChangeListener(null);
+            switchBlocker.setChecked(isEnabled);
+            setupSwitchListener();
 
-        if (isEnabled) {
-            layoutStatusBg.setBackgroundResource(R.drawable.bg_status_active);
-            imgStatusIcon.setImageResource(R.drawable.ic_shield);
-            tvStatusTitle.setText(R.string.blocking_active);
-            tvStatusDesc.setText(R.string.status_active_desc);
-        } else {
-            layoutStatusBg.setBackgroundResource(R.drawable.bg_status_inactive);
-            imgStatusIcon.setImageResource(R.drawable.ic_shield_off);
-            tvStatusTitle.setText(R.string.blocking_paused);
-            tvStatusDesc.setText(R.string.status_paused_desc);
+            if (isEnabled) {
+                layoutStatusBg.setBackgroundResource(R.drawable.bg_status_active);
+                imgStatusIcon.setImageResource(R.drawable.ic_shield);
+                tvStatusTitle.setText(R.string.blocking_active);
+                tvStatusDesc.setText(R.string.status_active_desc);
+            } else {
+                layoutStatusBg.setBackgroundResource(R.drawable.bg_status_inactive);
+                imgStatusIcon.setImageResource(R.drawable.ic_shield_off);
+                tvStatusTitle.setText(R.string.blocking_paused);
+                tvStatusDesc.setText(R.string.status_paused_desc);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing status card", e);
         }
     }
 
     private void checkPermissions() {
-        // 1. Call Screening Role
-        boolean hasScreeningRole = isCallScreeningRoleHeld();
-        if (hasScreeningRole) {
-            iconPermScreening.setImageResource(R.drawable.ic_check);
-            btnGrantScreening.setText(R.string.btn_granted);
-            btnGrantScreening.setEnabled(false);
-        } else {
-            iconPermScreening.setImageResource(R.drawable.ic_warning);
-            btnGrantScreening.setText(R.string.btn_grant);
-            btnGrantScreening.setEnabled(true);
-        }
+        try {
+            // 1. Call Screening Role
+            boolean hasScreeningRole = isCallScreeningRoleHeld();
+            if (hasScreeningRole) {
+                iconPermScreening.setImageResource(R.drawable.ic_check);
+                btnGrantScreening.setText(R.string.btn_granted);
+                btnGrantScreening.setEnabled(false);
+            } else {
+                iconPermScreening.setImageResource(R.drawable.ic_warning);
+                btnGrantScreening.setText(R.string.btn_grant);
+                btnGrantScreening.setEnabled(true);
+            }
 
-        // 2. Contacts Permission
-        boolean hasContactsPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
-                == PackageManager.PERMISSION_GRANTED;
-        if (hasContactsPerm) {
-            iconPermContacts.setImageResource(R.drawable.ic_check);
-            btnGrantContacts.setText(R.string.btn_granted);
-            btnGrantContacts.setEnabled(false);
-        } else {
-            iconPermContacts.setImageResource(R.drawable.ic_warning);
-            btnGrantContacts.setText(R.string.btn_grant);
-            btnGrantContacts.setEnabled(true);
-        }
-
-        // 3. Notification Permission
-        boolean hasNotifPerm = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            hasNotifPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            // 2. Contacts Permission
+            boolean hasContactsPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
                     == PackageManager.PERMISSION_GRANTED;
-        }
-        if (hasNotifPerm) {
-            iconPermNotification.setImageResource(R.drawable.ic_check);
-            btnGrantNotification.setText(R.string.btn_granted);
-            btnGrantNotification.setEnabled(false);
-        } else {
-            iconPermNotification.setImageResource(R.drawable.ic_warning);
-            btnGrantNotification.setText(R.string.btn_grant);
-            btnGrantNotification.setEnabled(true);
+            if (hasContactsPerm) {
+                iconPermContacts.setImageResource(R.drawable.ic_check);
+                btnGrantContacts.setText(R.string.btn_granted);
+                btnGrantContacts.setEnabled(false);
+            } else {
+                iconPermContacts.setImageResource(R.drawable.ic_warning);
+                btnGrantContacts.setText(R.string.btn_grant);
+                btnGrantContacts.setEnabled(true);
+            }
+
+            // 3. Notification Permission
+            boolean hasNotifPerm = true;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                hasNotifPerm = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED;
+            }
+            if (hasNotifPerm) {
+                iconPermNotification.setImageResource(R.drawable.ic_check);
+                btnGrantNotification.setText(R.string.btn_granted);
+                btnGrantNotification.setEnabled(false);
+            } else {
+                iconPermNotification.setImageResource(R.drawable.ic_warning);
+                btnGrantNotification.setText(R.string.btn_grant);
+                btnGrantNotification.setEnabled(true);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking permissions", e);
         }
     }
 
     private boolean isCallScreeningRoleHeld() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            RoleManager roleManager = getSystemService(RoleManager.class);
-            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
-                return roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RoleManager roleManager = getSystemService(RoleManager.class);
+                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+                    return roleManager.isRoleHeld(RoleManager.ROLE_CALL_SCREENING);
+                }
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking role held", e);
         }
-        return true; // Not required on pre-Android 10
+        return false;
     }
 
     private void requestCallScreeningRole() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            RoleManager roleManager = getSystemService(RoleManager.class);
-            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
-                Intent intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING);
-                startActivityForResult(intent, REQUEST_CODE_ROLE);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                RoleManager roleManager = getSystemService(RoleManager.class);
+                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING)) {
+                    Intent intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING);
+                    startActivityForResult(intent, REQUEST_CODE_ROLE);
+                }
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error requesting role", e);
+            Toast.makeText(this, "Please set Call Blocker as default in Android Settings > Apps > Default Apps", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -255,18 +308,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadHistory() {
-        List<BlockedCallItem> blockedCalls = BlockerPreferences.getBlockedCalls(this);
-        if (blockedCalls.isEmpty()) {
-            tvEmptyHistory.setVisibility(View.VISIBLE);
-            rvBlockedCalls.setVisibility(View.GONE);
-            btnClearHistory.setVisibility(View.GONE);
-            tvHistoryTitle.setText(R.string.title_history);
-        } else {
-            tvEmptyHistory.setVisibility(View.GONE);
-            rvBlockedCalls.setVisibility(View.VISIBLE);
-            btnClearHistory.setVisibility(View.VISIBLE);
-            tvHistoryTitle.setText(getString(R.string.title_history) + " (" + blockedCalls.size() + ")");
-            adapter.updateData(blockedCalls);
+        try {
+            List<BlockedCallItem> blockedCalls = BlockerPreferences.getBlockedCalls(this);
+            if (blockedCalls == null || blockedCalls.isEmpty()) {
+                tvEmptyHistory.setVisibility(View.VISIBLE);
+                rvBlockedCalls.setVisibility(View.GONE);
+                btnClearHistory.setVisibility(View.GONE);
+                tvHistoryTitle.setText(R.string.title_history);
+            } else {
+                tvEmptyHistory.setVisibility(View.GONE);
+                rvBlockedCalls.setVisibility(View.VISIBLE);
+                btnClearHistory.setVisibility(View.VISIBLE);
+                tvHistoryTitle.setText(getString(R.string.title_history) + " (" + blockedCalls.size() + ")");
+                adapter.updateData(blockedCalls);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading history", e);
         }
     }
 
