@@ -21,15 +21,29 @@
     <string name="perm_screening_title">1. Set as Call Screening App</string>
     <string name="perm_screening_desc">Required for Android to let the app screen and block incoming calls</string>
     <string name="perm_contacts_title">2. Contacts Permission</string>
-    <string name="perm_contacts_desc">Required to check whether incoming caller is in your address book</string>
+    <string name="perm_contacts_desc">Required to dynamically check whether incoming caller is in your address book</string>
     <string name="perm_notification_title">3. Notification Permission</string>
     <string name="perm_notification_desc">Required to show the quick toggle button in your notification drawer</string>
     <string name="btn_grant">Grant</string>
     <string name="btn_granted">Granted ✓</string>
 
+    <!-- Dynamic Contacts -->
+    <string name="title_contacts_sync">Live Contacts Sync</string>
+    <string name="contacts_synced_count">%1$d saved contacts dynamically recognized</string>
+    <string name="contacts_not_granted">Grant contacts permission above to sync</string>
+
+    <!-- Stealth / Hide App Feature -->
+    <string name="title_stealth">Privacy &amp; Stealth</string>
+    <string name="hide_app_title">Hide App from App Drawer</string>
+    <string name="hide_app_desc">Hides the app icon from your phone. Open anytime by holding (long-pressing) the Quick Settings Tile or tapping the notification.</string>
+    <string name="dialog_hide_title">Hide App Icon?</string>
+    <string name="dialog_hide_msg">The app icon will vanish from your phone\'s app drawer.\n\nTo reopen Call Blocker:\n• Hold (long-press) the \"Block Unknowns\" Quick Settings Tile\n• OR tap the persistent status notification.</string>
+    <string name="dialog_btn_hide">Hide Icon</string>
+    <string name="dialog_btn_cancel">Cancel</string>
+
     <!-- Tile guide -->
     <string name="title_tile_guide">Quick Settings Tile (Like Wi-Fi / Bluetooth)</string>
-    <string name="tile_guide_desc">Swipe down from top of your screen twice to open Quick Settings, tap the Edit (pencil) icon, and drag "Block Unknowns" into your active tiles for 1-tap toggling anytime.</string>
+    <string name="tile_guide_desc">Swipe down twice from top of screen, tap Edit (pencil), and drag "Block Unknowns" next to Wi-Fi/Bluetooth.\n\n• Tap tile: Toggle blocking On/Off\n• Hold (long-press) tile: Open this app anytime</string>
 
     <!-- Blocked History -->
     <string name="title_history">Recently Blocked Calls</string>

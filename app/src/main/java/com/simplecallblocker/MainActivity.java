@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.List;
@@ -42,6 +43,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvStatusTitle;
     private TextView tvStatusDesc;
     private SwitchMaterial switchBlocker;
+
+    // Dynamic Contacts view
+    private TextView tvContactsStatus;
+
+    // Stealth / Hide App view
+    private SwitchMaterial switchHideApp;
 
     // Permission views
     private ImageView iconPermScreening;
@@ -60,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isReceiverRegistered = false;
 
-    // Broadcast receiver to listen for toggle events from Notification or QS Tile
+    // Broadcast receiver to listen for real-time toggle events from Tile or Notification
     private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -85,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "MainActivity initialized successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error in onCreate", e);
-            Toast.makeText(this, "Startup warning: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Startup notice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -111,7 +118,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         refreshStatusCard();
+        refreshHideAppSwitch();
         checkPermissions();
+        refreshContactsSync();
         loadHistory();
     }
 
@@ -134,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
         tvStatusDesc = findViewById(R.id.tvStatusDesc);
         switchBlocker = findViewById(R.id.switchBlocker);
 
+        tvContactsStatus = findViewById(R.id.tvContactsStatus);
+        switchHideApp = findViewById(R.id.switchHideApp);
+
         iconPermScreening = findViewById(R.id.iconPermScreening);
         btnGrantScreening = findViewById(R.id.btnGrantScreening);
         iconPermContacts = findViewById(R.id.iconPermContacts);
@@ -148,7 +160,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        setupSwitchListener();
+        setupBlockerSwitchListener();
+        setupHideAppSwitchListener();
 
         btnGrantScreening.setOnClickListener(v -> requestCallScreeningRole());
         btnGrantContacts.setOnClickListener(v -> requestContactsPermission());
@@ -161,15 +174,59 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setupSwitchListener() {
+    private void setupBlockerSwitchListener() {
         switchBlocker.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked != BlockerPreferences.isBlockerEnabled(this)) {
                 BlockerPreferences.setBlockerEnabled(this, isChecked);
                 refreshStatusCard();
                 NotificationHelper.updateStatusNotification(this);
                 updateTileService();
+
+                // Broadcast to update any listening services
+                Intent broadcast = new Intent(BlockerPreferences.ACTION_STATE_CHANGED);
+                broadcast.setPackage(getPackageName());
+                sendBroadcast(broadcast);
             }
         });
+    }
+
+    private void setupHideAppSwitchListener() {
+        switchHideApp.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            boolean currentHidden = BlockerPreferences.isAppHidden(this);
+            if (isChecked == currentHidden) return;
+
+            if (isChecked) {
+                // Confirm before hiding
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.dialog_hide_title)
+                        .setMessage(R.string.dialog_hide_msg)
+                        .setPositiveButton(R.string.dialog_btn_hide, (dialog, which) -> {
+                            BlockerPreferences.setAppHidden(this, true);
+                            Toast.makeText(this, "App icon hidden! Hold the Quick Settings Tile anytime to open.", Toast.LENGTH_LONG).show();
+                        })
+                        .setNegativeButton(R.string.dialog_btn_cancel, (dialog, which) -> {
+                            switchHideApp.setOnCheckedChangeListener(null);
+                            switchHideApp.setChecked(false);
+                            setupHideAppSwitchListener();
+                        })
+                        .setCancelable(false)
+                        .show();
+            } else {
+                BlockerPreferences.setAppHidden(this, false);
+                Toast.makeText(this, "App icon restored to your phone's app list.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void refreshHideAppSwitch() {
+        try {
+            boolean isHidden = BlockerPreferences.isAppHidden(this);
+            switchHideApp.setOnCheckedChangeListener(null);
+            switchHideApp.setChecked(isHidden);
+            setupHideAppSwitchListener();
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing hide app switch", e);
+        }
     }
 
     private void setupRecyclerView() {
@@ -183,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
             boolean isEnabled = BlockerPreferences.isBlockerEnabled(this);
             switchBlocker.setOnCheckedChangeListener(null);
             switchBlocker.setChecked(isEnabled);
-            setupSwitchListener();
+            setupBlockerSwitchListener();
 
             if (isEnabled) {
                 layoutStatusBg.setBackgroundResource(R.drawable.bg_status_active);
@@ -198,6 +255,19 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error refreshing status card", e);
+        }
+    }
+
+    private void refreshContactsSync() {
+        try {
+            int count = BlockerPreferences.getContactCount(this);
+            if (count >= 0) {
+                tvContactsStatus.setText(getString(R.string.contacts_synced_count, count));
+            } else {
+                tvContactsStatus.setText(R.string.contacts_not_granted);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error refreshing contacts sync count", e);
         }
     }
 
@@ -342,7 +412,9 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         checkPermissions();
-        if (requestCode == REQUEST_CODE_NOTIF) {
+        if (requestCode == REQUEST_CODE_CONTACTS) {
+            refreshContactsSync();
+        } else if (requestCode == REQUEST_CODE_NOTIF) {
             NotificationHelper.updateStatusNotification(this);
         }
     }

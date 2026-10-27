@@ -34,6 +34,7 @@ public class ToggleReceiver extends BroadcastReceiver {
 
         // Notify active activity if visible
         Intent stateChangedIntent = new Intent(BlockerPreferences.ACTION_STATE_CHANGED);
+        stateChangedIntent.setPackage(context.getPackageName());
         context.sendBroadcast(stateChangedIntent);
 
         // Feedback toast

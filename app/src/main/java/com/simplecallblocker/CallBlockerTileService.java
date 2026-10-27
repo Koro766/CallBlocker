@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi;
 /**
  * Quick Settings Tile service that provides a quick toggle in the
  * notification dropdown shade just like Wi-Fi and Bluetooth.
+ * Holding (long-pressing) this tile opens the app via QS_TILE_PREFERENCES.
  */
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class CallBlockerTileService extends TileService {
@@ -18,6 +19,7 @@ public class CallBlockerTileService extends TileService {
     @Override
     public void onStartListening() {
         super.onStartListening();
+        // Dynamically sync state whenever notification panel is pulled down
         updateTileState();
     }
 
@@ -28,11 +30,15 @@ public class CallBlockerTileService extends TileService {
         boolean newState = !currentState;
         BlockerPreferences.setBlockerEnabled(this, newState);
 
+        // Update tile UI
         updateTileState();
+
+        // Update notification
         NotificationHelper.updateStatusNotification(this);
 
-        // Notify active activity if visible
+        // Broadcast to synchronize in-app switch in real-time
         Intent stateChangedIntent = new Intent(BlockerPreferences.ACTION_STATE_CHANGED);
+        stateChangedIntent.setPackage(getPackageName());
         sendBroadcast(stateChangedIntent);
     }
 
